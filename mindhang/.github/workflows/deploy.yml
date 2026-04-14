@@ -1,0 +1,28 @@
+name: Deploy MindHang to GitHub Pages
+on:
+  push:
+    branches: [main]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Create config.js from secret
+        run: |
+          cat > js/config.js << 'EOF'
+          console.log('[config.js] loaded');
+          const CONFIG = {
+            groqApiKey: '${{ secrets.GROQ_API_KEY }}',
+            groqModel: 'llama3-70b-8192',
+            groqEndpoint: 'https://api.groq.com/openai/v1/chat/completions',
+            bluffRates: { easy: 0.08, medium: 0.28, hard: 0.45 },
+            scoring: { correctGuess: 10, winBonus: 50, correctBluffCall: 25, wrongGuess: -5, wrongBluffCall: -15, hintEarly: -5, hintLate: 0 },
+            weightMin: 1.0, weightMax: 5.0, weightIncrement: 1.0, weightDecrement: 0.5,
+          };
+          EOF
+
+      - uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./
